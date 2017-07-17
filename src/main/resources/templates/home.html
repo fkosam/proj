@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<style>
+		
+		table.data  {
+		    font-family: arial, sans-serif;
+		    border-collapse: collapse;
+		    width: 100%;
+		}
+		table.data tr td, th  {
+		    border: 1px solid #dddddd;
+		    text-align: left;
+		    padding: 8px;
+		}
+		table.data tr:nth-child(even) {
+		    background-color: #dddddd;
+		}
+		
+	</style>
+</head>
+	<body style="width: 80%">
+		<div id="content"></div>
+
+		<div style="padding-top: 5px;padding-bottom: 5px; border: solid 1px #dddddd;">
+			<div style="padding: 5px;">
+				<div  style="display: inline-block;">
+					<button onclick="controllerIns.searchFiles(); return false;">Refresh</button>
+				</div>
+				<div id="createNewBtn"  style="display: inline-block;">
+					<button onclick="controllerIns.showUpload(); return false;">Create New</button>
+				</div>
+				<div id="searchBtn" style="display: inline-block;">
+					<button onclick="controllerIns.showSearch(); return false;">Search</button>
+				</div>
+			</div>	
+		</div>				
+
+		<div  style="padding-top: 5px" id="tbl"></div>
+		
+
+		
+ 	<script id="upload-template" type="text/x-handlebars-template"> 
+	<div style="border: solid 1px #dddddd;  ">
+		<div style="padding: 15px;">
+			<div style="border-bottom: solid 1px #dddddd; ">
+				<span style="font-weight:bold">Add New File</span>	
+			</div>
+			<div style="padding-top: 5px">
+				<form method="POST" enctype="multipart/form-data" id="fileUploadForm">
+				    <input type="file"  id="file-Upload-field" name="file"/><br/><br/>
+				    <input type="button" value="Submit" id="uploadFile" style="display:none" />
+				</form>
+				<form>
+					<div  id="metaDataContent">
+					</div>	
+					<div style="padding-top: 2px;">	
+						<button id="addFile" onclick='controllerIns.addFile();  return false;' > Create New File</button>
+						<button onclick='controllerIns.metaDataCntrlIns.addMetaDataField();  return false;' > Add Meta Data</button>
+						<button  style="padding-left:2px" id="close" onclick='controllerIns.closeContent();  return false;' > Close</button>
+					</div>	
+				</form>
+			</div>	
+		</div>
+	</div>
+	</script>
+
+    	<script id="metaData-template" type="text/x-handlebars-template">   
+		<ul style="list-style=:none">
+		{{#each this as |md mdIndex|}}
+			<li>	
+				Key: <input type="text" value="{{md.key}}"   onchange="controllerIns.metaDataCntrlIns.setKey({{mdIndex}},$(this).val())"    id="{{md.keyId}}" /> 
+				- Value: <input type="text"  value="{{md.value}}" onchange="controllerIns.metaDataCntrlIns.setValue({{mdIndex}},$(this).val())"    id="{{md.valueId}}" /> 
+				<a href="#" onclick="controllerIns.metaDataCntrlIns.removeMetaDataField({{mdIndex}}); return false;">(-)</a>	
+			</li>
+		{{/each}}
+
+		</ul>
+	</script>
+	
+	
+	
+        	  <script id="search-template" type="text/x-handlebars-template">    
+	<div style="border: solid 1px #dddddd;">
+		<div style="padding: 15px;">
+			<div style="border-bottom: solid 1px #dddddd; ">
+				<span style="font-weight:bold">Search Files</span>	
+			</div>
+			<div style="padding-top: 5px">
+				<table style="border:none">
+					<tr>
+					<td style="text-align: right;" >FileName: </td><td><input type="text" id="filename"  /></td>
+					</tr>
+					<tr>	
+				   		<td style="text-align: right;"> Key: </td><td><input type="text" id="key"/></td>
+					</tr>
+					<tr>
+				    	<td style="text-align: right;">Value: </td><td><input type="text" id="value"/></td>
+					</tr>
+				</table>    
+			    <button onclick="controllerIns.searchFiles(); return false;">Search</button>
+			    <button style="padding-left:2px"  onclick="controllerIns.closeContent(); return false;">Close</button>
+			</div>				    
+		</div>	
+	</div>
+	</script>
+
+		
+    <script id="table-template" type="text/x-handlebars-template">  		
+	<div >
+		<table class="data" cellspacing="5" cellpadding="5">
+			<thead>
+				<tr>
+					<td>
+						Name
+					</td>
+					<td>
+						Creation Time
+					</td>			
+					<td>
+						Attributes
+					</td>
+					<td>
+						Action
+					</td>
+				</tr>
+			</thead>
+			<tbody>
+				{{#each this as |file fileIndex|}}
+					<tr>
+						<td>
+							<a href="#" class="downloadInd" onClick="controllerIns.downloadFile('{{file.id}}','{{file.fileName}}',this); return false"><span>{{file.fileName}}</span></a>
+						</td>
+						<td>
+							{{creationTime file.creationTime}}
+						</td>
+						<td>
+							<ul>
+								{{#each file.metaDatas as |md| }}
+									<li>
+										{{md.key}} - {{md.value}}
+									</li>	
+								{{/each}}
+							</ul>	
+						</td>
+						<td>
+							<a href="#"   onclick="controllerIns.deleteFile('{{file.id}}') ; return false;">Delete</a>
+						</td>
+					</tr>
+				{{/each}}	
+			</tbody>
+		</table>
+	</div>
+</script>	
+<script id="notbl" type="text/x-handlebars-template">
+	<div style="border: solid 1px #dddddd;">
+		<div style="padding:10px">
+			<span>No Files Found</span>
+		</div>		
+	</div>
+</script>	
+
+	
+	<script type="text/javascript" src="webjars/jquery/2.2.4/jquery.min.js"></script>
+	<script type="text/javascript" src="js/handlebars-v3.0.3.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+	</body>
+</html>
